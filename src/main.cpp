@@ -29,6 +29,7 @@ struct ComponentTable
     int position = COMPONENT_UNDEFINED;
     int velocity = COMPONENT_UNDEFINED;
     int animation = COMPONENT_UNDEFINED;
+    int name = COMPONENT_UNDEFINED;
 };
 
 std::vector<int> entities;
@@ -37,11 +38,12 @@ std::vector<ComponentTable> tables;
 using PositionContainer = std::vector<std::pair<int, Position>>;
 using VelocityContainer = std::vector<std::pair<int, Velocity>>;
 using AnimationContainer = std::vector<std::pair<int, Animation>>;
+using NameContainer = std::vector<std::pair<int, std::string>>;
 
 PositionContainer positions;
 VelocityContainer velocities;
 AnimationContainer animations;
-
+NameContainer names;
 
 int create_entity()
 {
@@ -52,8 +54,8 @@ int create_entity()
     return i;
 }
 
-template<class T>
-T* add_component(int entity)
+template<class T, class... Args>
+T* add_component(int entity, Args&&... args)
 {
     auto& table = tables[entity];
 
@@ -90,6 +92,17 @@ T* add_component(int entity)
             return &pair.second;
         }
     }
+    else if constexpr(std::is_same<T, std::string>::value)
+    {
+        if (table.name == COMPONENT_UNDEFINED)
+        {
+            table.name = names.size();
+            auto& pair = names.emplace_back(entity, std::forward<Args>(args)...);
+            pair.first = entity;
+
+            return &pair.second;
+        }
+    }
 
     return nullptr;
 }
@@ -114,6 +127,11 @@ T* get_component(int entity)
         if (int anim = table.animation; anim != COMPONENT_UNDEFINED)
             return &animations[anim].second;
     }
+    else if constexpr (std::is_same<T, std::string>::value)
+    {
+        if (int name = table.name; name != COMPONENT_UNDEFINED)
+            return &names[name].second;
+    }
 
     return nullptr;
 }
@@ -135,6 +153,10 @@ void remove_component_from_container(int i, T& container)
     else if constexpr (std::is_same<T, Animation>::value)
     {
         tables[back.first].animation = i;
+    }
+    else if constexpr (std::is_same<T, std::string>::value)
+    {
+        tables[back.first].name = i;
     }
     
     std::swap(pos, back);
@@ -170,6 +192,14 @@ void remove_component(int entity)
             table.animation = COMPONENT_UNDEFINED;
         }
     }
+    else if constexpr (std::is_same<T, std::string>::value)
+    {
+        if (int i = table.name; i != COMPONENT_UNDEFINED)
+        {
+            remove_component_from_container<NameContainer>(i, names);
+            table.name = COMPONENT_UNDEFINED;
+        }
+    }
 }
 
 void destroy_entity(int entity)
@@ -189,6 +219,11 @@ void destroy_entity(int entity)
     if (int i = table.animation; i != COMPONENT_UNDEFINED)
     {
         remove_component<Animation>(entity);
+    }
+
+    if (int i = table.name; i != COMPONENT_UNDEFINED)
+    {
+        remove_component<std::string>(entity);
     }
 
     entities[entity] = entities.back();
@@ -240,7 +275,14 @@ int main()
 
         if (i % 2 == 0)
             add_component<Animation>(entity);
+
+        if (i % 10000 == 0)
+            add_component<std::string>(i, "name - " + std::to_string(i));
     }
+
+    for (size_t i = 0; i < nbEntities; ++i)
+        if(auto* name = get_component<std::string>(i); name != nullptr)
+            std::cout << *name << '\n';
 
     auto prevTime = std::chrono::system_clock::now();
     auto start = std::chrono::system_clock::now();
