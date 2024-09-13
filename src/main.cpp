@@ -59,7 +59,7 @@ T* add_component(int entity, Args&&... args)
 {
     auto& table = tables[entity];
 
-    if constexpr(std::is_same<T, Position>::value)
+    if constexpr(std::is_same_v<T, Position>)
     {
         if (table.position == COMPONENT_UNDEFINED)
         {
@@ -70,7 +70,7 @@ T* add_component(int entity, Args&&... args)
             return &pair.second;
         }
     }
-    else if constexpr(std::is_same<T, Velocity>::value)
+    else if constexpr(std::is_same_v<T, Velocity>)
     {
         if (table.velocity == COMPONENT_UNDEFINED)
         {
@@ -81,7 +81,7 @@ T* add_component(int entity, Args&&... args)
             return &pair.second;
         }
     }
-    else if constexpr(std::is_same<T, Animation>::value)
+    else if constexpr(std::is_same_v<T, Animation>)
     {
         if (table.animation == COMPONENT_UNDEFINED)
         {
@@ -92,7 +92,7 @@ T* add_component(int entity, Args&&... args)
             return &pair.second;
         }
     }
-    else if constexpr(std::is_same<T, std::string>::value)
+    else if constexpr(std::is_same_v<T, std::string>)
     {
         if (table.name == COMPONENT_UNDEFINED)
         {
@@ -112,22 +112,22 @@ T* get_component(int entity)
 {
     auto& table = tables[entity];
 
-    if constexpr (std::is_same<T, Position>::value)
+    if constexpr (std::is_same_v<T, Position>)
     {
         if (int pos = table.position; pos != COMPONENT_UNDEFINED)
             return &positions[pos].second;
     }
-    else if constexpr (std::is_same<T, Velocity>::value)
+    else if constexpr (std::is_same_v<T, Velocity>)
     {
         if (int vel = table.velocity; vel != COMPONENT_UNDEFINED)
             return &velocities[vel].second;
     }
-    else if constexpr (std::is_same<T, Animation>::value)
+    else if constexpr (std::is_same_v<T, Animation>)
     {
         if (int anim = table.animation; anim != COMPONENT_UNDEFINED)
             return &animations[anim].second;
     }
-    else if constexpr (std::is_same<T, std::string>::value)
+    else if constexpr (std::is_same_v<T, std::string>)
     {
         if (int name = table.name; name != COMPONENT_UNDEFINED)
             return &names[name].second;
@@ -142,19 +142,19 @@ void remove_component_from_container(int i, T& container)
     auto& pos = positions[i];
     auto& back = positions.back();
 
-    if constexpr (std::is_same<T, Position>::value)
+    if constexpr (std::is_same_v<T, Position>)
     {
         tables[back.first].position = i;
     }
-    else if constexpr (std::is_same<T, Velocity>::value)
+    else if constexpr (std::is_same_v<T, Velocity>)
     {
         tables[back.first].velocity = i;
     }
-    else if constexpr (std::is_same<T, Animation>::value)
+    else if constexpr (std::is_same_v<T, Animation>)
     {
         tables[back.first].animation = i;
     }
-    else if constexpr (std::is_same<T, std::string>::value)
+    else if constexpr (std::is_same_v<T, std::string>)
     {
         tables[back.first].name = i;
     }
@@ -168,7 +168,7 @@ void remove_component(int entity)
 {
     auto& table = tables[entity];
 
-    if constexpr (std::is_same<T, Position>::value)
+    if constexpr (std::is_same_v<T, Position>)
     {
         if (int i = table.position; i != COMPONENT_UNDEFINED)
         {
@@ -176,7 +176,7 @@ void remove_component(int entity)
             table.position = COMPONENT_UNDEFINED;
         }
     }
-    else if constexpr (std::is_same<T, Velocity>::value)
+    else if constexpr (std::is_same_v<T, Velocity>)
     {
         if (int i = table.velocity; i != COMPONENT_UNDEFINED)
         {
@@ -184,7 +184,7 @@ void remove_component(int entity)
             table.velocity = COMPONENT_UNDEFINED;
         }
     }
-    else if constexpr (std::is_same<T, Animation>::value)
+    else if constexpr (std::is_same_v<T, Animation>)
     {
         if (int i = table.animation; i != COMPONENT_UNDEFINED)
         {
@@ -192,7 +192,7 @@ void remove_component(int entity)
             table.animation = COMPONENT_UNDEFINED;
         }
     }
-    else if constexpr (std::is_same<T, std::string>::value)
+    else if constexpr (std::is_same_v<T, std::string>)
     {
         if (int i = table.name; i != COMPONENT_UNDEFINED)
         {
