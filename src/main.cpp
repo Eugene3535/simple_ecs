@@ -235,30 +235,24 @@ void destroy_entity(int entity)
 
 void move_system()
 {
-    for(auto i : entities)
+    for (auto& pair : velocities)
     {
-        auto pos = get_component<Position>(i);
-        auto vel = get_component<Velocity>(i);
+        auto& entity_table = tables[pair.first];
+        auto& velocity = pair.second;
+        auto& position = positions[entity_table.position].second;
 
-        if (pos && vel)
-        {
-            pos->x += vel->x;
-            pos->y += vel->y;
-        }
+        position.x += velocity.x;
+        position.y += velocity.y;
     }
 }
 
 void anim_system(float dt)
 {
-    for (auto i : entities)
+    for (auto& pair : animations)
     {
-        auto anim = get_component<Animation>(i);
-
-        if (anim)
-        {
-            anim->dt += dt;
-            anim->frame = anim->dt;
-        }
+        auto& anim = pair.second;
+        anim.dt += dt;
+        anim.frame = anim.dt;
     }
 }
 
@@ -298,7 +292,7 @@ int main()
             if (auto anim = get_component<Animation>(i); anim != nullptr)
             {
                 remove_component<Animation>(i);
-                std::cout << "removed animation " << i << '\n';
+                //std::cout << "removed animation " << i << '\n';
             }
         }
 
