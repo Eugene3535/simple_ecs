@@ -204,28 +204,11 @@ void remove_component(int entity)
 
 void destroy_entity(int entity)
 {
-    auto& table = tables[entity];
-
-    if (int i = table.position; i != COMPONENT_UNDEFINED)
-    {
-        remove_component<Position>(entity);
-    }
-
-    if (int i = table.velocity; i != COMPONENT_UNDEFINED)
-    {
-        remove_component<Velocity>(entity);
-    }
-
-    if (int i = table.animation; i != COMPONENT_UNDEFINED)
-    {
-        remove_component<Animation>(entity);
-    }
-
-    if (int i = table.name; i != COMPONENT_UNDEFINED)
-    {
-        remove_component<std::string>(entity);
-    }
-
+    remove_component<Position>(entity);
+    remove_component<Velocity>(entity);
+    remove_component<Animation>(entity);
+    remove_component<std::string>(entity);
+    
     entities[entity] = entities.back();
     std::swap(tables[entity], tables.back());
 
