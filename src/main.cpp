@@ -97,7 +97,7 @@ T* add_component(int entity, Args&&... args)
         if (table.name == COMPONENT_UNDEFINED)
         {
             table.name = names.size();
-            auto& pair = names.emplace_back(entity, std::forward<Args>(args)...);
+            auto& pair = names.emplace_back(entity, args...);
             pair.first = entity;
 
             return &pair.second;
@@ -139,8 +139,8 @@ T* get_component(int entity)
 template<class T>
 void remove_component_from_container(int i, T& container)
 {
-    auto& pos = positions[i];
-    auto& back = positions.back();
+    auto& pos = container[i];
+    auto& back = container.back();
 
     if constexpr (std::is_same_v<T, Position>)
     {
@@ -160,7 +160,7 @@ void remove_component_from_container(int i, T& container)
     }
     
     std::swap(pos, back);
-    positions.pop_back();
+    container.pop_back();
 }
 
 template<class T>
