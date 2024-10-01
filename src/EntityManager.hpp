@@ -37,7 +37,11 @@ public:
     template<class T>
     void removeComponent(uint32_t entity) noexcept;
 
-//private:
+    std::vector<uint32_t>&       getEntities() noexcept;
+    std::vector<ComponentTable>& getEntityTables() noexcept;
+    ComponentMap&                getComponentMap() noexcept;
+
+private:
     std::vector<uint32_t>       m_entities;
     std::vector<ComponentTable> m_tables;
     ComponentMap                m_componentMap;

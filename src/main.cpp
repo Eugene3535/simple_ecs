@@ -7,37 +7,90 @@
 
 #include "EntityManager.hpp"
 
-void move_system(EntityManager& entityManager)
+class System
 {
-    auto velocities = entityManager.m_componentMap.getContainer<Velocity>();
-    auto positions = entityManager.m_componentMap.getContainer<Position>();
-
-    for (auto& pair : *velocities)
+public:
+    System(EntityManager& entityManager) noexcept:
+        m_entityManager(entityManager)
     {
-        auto& entity_table = entityManager.m_tables[pair.first];
-        auto& velocity = pair.second;
-        auto& position = (*positions)[entity_table.position].second;
 
-        position.x += velocity.x;
-        position.y += velocity.y;
     }
-}
 
-void anim_system(EntityManager& entityManager, float dt)
+    virtual ~System() = default;
+
+    virtual void execute(float delta_time) noexcept
+    {
+        // empty body
+    }
+
+protected:
+    EntityManager& m_entityManager;
+};
+
+class MovementSystem: public System
 {
-    auto animations = entityManager.m_componentMap.getContainer<Animation>();
+    using Velocities = std::vector<std::pair<uint32_t, Velocity>>;
+    using Positions = std::vector<std::pair<uint32_t, Position>>;
 
-    for (auto& pair : *animations)
+public:
+    MovementSystem(EntityManager& entityManager) noexcept:
+        System(entityManager),
+        m_positions(nullptr),
+        m_velocities(nullptr)
     {
-        auto& anim = pair.second;
-        anim.dt += dt;
-        anim.frame = anim.dt;
+        m_velocities = entityManager.getComponentMap().getContainer<Velocity>();
+        m_positions = entityManager.getComponentMap().getContainer<Position>();
     }
-}
+
+    void execute(float delta_time) noexcept override
+    {
+        for (auto& pair : *m_velocities)
+        {
+            auto& entity_table = m_entityManager.getEntityTables()[pair.first];
+            auto& velocity = pair.second;
+            auto& position = (*m_positions)[entity_table.position].second;
+
+            position.x += velocity.x;
+            position.y += velocity.y;
+        }
+    }
+
+private:
+    Velocities* m_velocities;
+    Positions* m_positions;
+};
+
+class AnimationSystem: public System
+{
+    using Animations = std::vector<std::pair<uint32_t, Animation>>;
+
+public:
+    AnimationSystem(EntityManager& entityManager) noexcept:
+        System(entityManager),
+        m_animations(nullptr)
+    {
+        m_animations = entityManager.getComponentMap().getContainer<Animation>();
+    }
+
+    void execute(float delta_time) noexcept override
+    {
+        for (auto& pair : *m_animations)
+        {
+            auto& anim = pair.second;
+            anim.dt += delta_time;
+            anim.frame = anim.dt;
+        }
+    }
+
+private:
+    Animations* m_animations;
+};
 
 int main() 
 {
     EntityManager entityManager;
+    MovementSystem move_system(entityManager);
+    AnimationSystem anim_system(entityManager);
 
     const size_t nbEntities = 100000;
     const size_t nbUpdates = 100;
@@ -69,8 +122,8 @@ int main()
             }
         }
 
-        move_system(entityManager);
-        anim_system(entityManager, dt);
+        move_system.execute(dt);
+        anim_system.execute(dt);
     }
 
     std::chrono::duration<float> dur = std::chrono::system_clock::now() - start;

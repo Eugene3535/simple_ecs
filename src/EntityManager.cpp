@@ -30,3 +30,18 @@ void EntityManager::destroyEntity(uint32_t entity) noexcept
     m_entities.pop_back();
     m_tables.pop_back();
 }
+
+std::vector<uint32_t>& EntityManager::getEntities() noexcept
+{
+    return m_entities;
+}
+
+std::vector<ComponentTable>& EntityManager::getEntityTables() noexcept
+{
+    return m_tables;
+}
+
+ComponentMap& EntityManager::getComponentMap() noexcept
+{
+    return m_componentMap;
+}
