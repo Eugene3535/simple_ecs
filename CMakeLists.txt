@@ -6,6 +6,8 @@ file(GLOB_RECURSE ECS_SRC_FILES CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/src/*.cp
 
 add_executable(${PROJECT_NAME} ${ECS_SRC_FILES})
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:DEBUG>)
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)

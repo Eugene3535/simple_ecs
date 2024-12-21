@@ -1,119 +1,150 @@
-template<class T>
-T* Ecs::addComponent(int entity) noexcept
+template<size_t N>
+Ecs<N>::Ecs() noexcept = default;
+
+template<size_t N>
+Ecs<N>::~Ecs() noexcept = default;
+
+template<class T, size_t N>
+constexpr auto make_array(T value) -> std::array<T, N>
 {
-    auto& table = m_tables[entity];
+    std::array<T, N> a{};
+    for (auto& x : a)
+        x = value;
+    return a;
+}
 
-    if constexpr(std::is_same_v<T, Position>)
+template<size_t N>
+uint32_t Ecs<N>::createEntity() noexcept
+{
+    uint32_t i = static_cast<uint32_t>(m_entities.size());
+    m_entities.emplace_back(i, make_array<uint32_t, N>(UINT_MAX));
+    m_bitMasks.emplace_back();
+
+    return i;
+}
+
+template<size_t N>
+void Ecs<N>::destroyEntity(uint32_t entity) noexcept
+{
+    auto quick_remove = [](auto& container, size_t index) -> void
     {
-        if (table.position == COMPONENT_UNDEFINED)
+        if(index < container.size())
         {
-            table.position = m_positions.size();
-            auto& pair = m_positions.emplace_back();
-            pair.first = entity;
+            std::swap(container[index], container.back());
+            container.pop_back();
+        }
+    };
 
-            return &pair.second;
+    auto& entityFlags   = m_bitMasks[static_cast<size_t>(entity)];
+    auto componentCount = BaseComponentContainer::getComponentCount();
+    auto& table         = m_entities[static_cast<size_t>(entity)].second;
+
+    for(uint32_t componentId = 0; componentId < componentCount; ++componentId)
+    {
+        if(entityFlags.test(componentId))
+        {
+            auto v = m_componentContainers[static_cast<size_t>(componentId)].get();
+            uint32_t idx = table[componentId];
+
+            v->erase(idx);
         }
     }
-    else if constexpr(std::is_same_v<T, Velocity>)
-    {
-        if (table.velocity == COMPONENT_UNDEFINED)
-        {
-            table.velocity = m_velocities.size();
-            auto& pair = m_velocities.emplace_back();
-            pair.first = entity;
 
-            return &pair.second;
-        }
+    quick_remove(m_entities, static_cast<size_t>(entity));
+    quick_remove(m_bitMasks, static_cast<size_t>(entity));
+}
+
+template<size_t N>
+template<class T>
+T* Ecs<N>::addComponent(uint32_t entity) noexcept
+{
+    auto& table       = m_entities[static_cast<size_t>(entity)].second;
+    auto  componentId = static_cast<size_t>(ComponentContainer<T>::Type);
+    auto& entityFlags = m_bitMasks[static_cast<size_t>(entity)];
+    auto  container   = getContainer<T>();
+
+    if(!entityFlags.test(componentId))
+    {
+        uint32_t idx = container->size();
+        auto& newComponent = container->emplace_back();
+        table[componentId] = idx;
+        entityFlags.set(componentId);
+
+        return &newComponent;
     }
-    else if constexpr(std::is_same_v<T, Animation>)
-    {
-        if (table.animation == COMPONENT_UNDEFINED)
-        {
-            table.animation = m_animations.size();
-            auto& pair = m_animations.emplace_back();
-            pair.first = entity;
 
-            return &pair.second;
-        }
+    size_t idx = table[componentId];
+
+    return container->data() + idx;
+}
+
+template<size_t N>
+template<class T>
+T* Ecs<N>::getComponent(uint32_t entity) noexcept
+{
+    auto componentId  = static_cast<size_t>(ComponentContainer<T>::Type);
+    auto& entityFlags = m_bitMasks[static_cast<size_t>(entity)];
+
+    if(entityFlags.test(componentId))
+    {
+        auto container = getContainer<T>();
+        auto& table    = m_entities[static_cast<size_t>(entity)].second;
+        size_t idx     = static_cast<size_t>(table[componentId]);
+
+        return container->data() + idx;
     }
 
     return nullptr;
 }
 
+template<size_t N>
 template<class T>
-T* Ecs::getComponent(int entity) noexcept
+void Ecs<N>::removeComponent(uint32_t entity) noexcept
 {
-    auto& table = m_tables[entity];
+    auto componentId  = static_cast<size_t>(ComponentContainer<T>::Type);
+    auto& entityFlags = m_bitMasks[static_cast<size_t>(entity)];
 
-    if constexpr (std::is_same_v<T, Position>)
+    if(entityFlags.test(componentId))
     {
-        if (int pos = table.position; pos != COMPONENT_UNDEFINED)
-            return &m_positions[pos].second;
-    }
-    else if constexpr (std::is_same_v<T, Velocity>)
-    {
-        if (int vel = table.velocity; vel != COMPONENT_UNDEFINED)
-            return &m_velocities[vel].second;
-    }
-    else if constexpr (std::is_same_v<T, Animation>)
-    {
-        if (int anim = table.animation; anim != COMPONENT_UNDEFINED)
-            return &m_animations[anim].second;
-    }
+        auto& table  = m_entities[static_cast<size_t>(entity)].second;
+        size_t index = static_cast<size_t>(table[componentId]);
 
-    return nullptr;
-}
-
-template<class T>
-void Ecs::removeComponent(int entity) noexcept
-{
-    auto& table = m_tables[entity];
-
-    if constexpr (std::is_same_v<T, Position>)
-    {
-        if (int i = table.position; i != COMPONENT_UNDEFINED)
+        if(auto index = static_cast<size_t>(ComponentContainer<T>::Type); index < m_componentContainers.size())
         {
-            removeComponentFromContainer(i, m_positions);
-            table.position = COMPONENT_UNDEFINED;
-        }
-    }
-    else if constexpr (std::is_same_v<T, Velocity>)
-    {
-        if (int i = table.velocity; i != COMPONENT_UNDEFINED)
-        {
-            removeComponentFromContainer(i, m_velocities);
-            table.velocity = COMPONENT_UNDEFINED;
-        }
-    }
-    else if constexpr (std::is_same_v<T, Animation>)
-    {
-        if (int i = table.animation; i != COMPONENT_UNDEFINED)
-        {
-            removeComponentFromContainer(i, m_animations);
-            table.animation = COMPONENT_UNDEFINED;
+            auto container = static_cast<ComponentContainer<T>*>(m_componentContainers[index].get());
+
+            container->erase(index);
+            entityFlags.reset(componentId);
         }
     }
 }
 
+template<size_t N>
 template<class T>
-void Ecs::removeComponentFromContainer(int i, T& container) noexcept
+bool Ecs<N>::hasComponent(uint32_t entity) noexcept
 {
-    auto& pos = container[i];
-    auto& back = container.back();
+    auto componentId  = static_cast<size_t>(ComponentContainer<T>::Type);
+    auto& entityFlags = m_bitMasks[static_cast<size_t>(entity)];
 
-    if constexpr (std::is_same_v<T, Position>)
-    {
-        m_tables[back.first].position = i;
-    }
-    else if constexpr (std::is_same_v<T, Velocity>)
-    {
-        m_tables[back.first].velocity = i;
-    }
-    else if constexpr (std::is_same_v<T, Animation>)
-    {
-        m_tables[back.first].animation = i;
-    }
-
-    std::swap(pos, back);
-    container.pop_back();
+    return entityFlags.test(componentId);
 }
+
+template<size_t N>
+template<class T>
+std::vector<T>* Ecs<N>::getContainer() noexcept
+{
+    if(!m_componentContainers.empty())
+    {
+        if(auto index = static_cast<size_t>(ComponentContainer<T>::Type); index < m_componentContainers.size())
+        {
+            auto container = static_cast<ComponentContainer<T>*>(m_componentContainers[index].get());
+
+            return &container->components;
+        }
+    }
+
+    auto containerPtr = static_cast<ComponentContainer<T>*>(m_componentContainers.emplace_back(std::make_unique<ComponentContainer<T>>()).get());
+
+    return &containerPtr->components;
+}
+

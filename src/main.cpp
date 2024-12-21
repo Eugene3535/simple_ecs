@@ -1,48 +1,47 @@
-#include <iostream>
-#include <chrono>
+#include <cstdio>
 
 #include "Ecs.hpp"
 
 int main()
 {
-    const size_t nbEntities = 100000;
-    const size_t nbUpdates = 100;
-
     Ecs ecs;
 
-    for (size_t i = 0; i < nbEntities; ++i)
-    {
-        int entity = ecs.createEntity();
-        ecs.addComponent<Position>(entity);
-        ecs.addComponent<Velocity>(entity);
+    auto entity = ecs.createEntity();
+    entity = ecs.createEntity();
+    entity = ecs.createEntity();
+    printf("Entity: %u\n", entity);
 
-        if (i % 2 == 0)
-            ecs.addComponent<Animation>(entity);
+    if(auto c = ecs.addComponent<int>(entity); c)
+    {
+        *c = 8;
+        printf("sucsess with code: %d\n", *c);
     }
 
-    auto prevTime = std::chrono::system_clock::now();
-    auto start = std::chrono::system_clock::now();
-
-    for (size_t i = 0; i < nbUpdates; ++i)
+    if(auto c = ecs.addComponent<float>(entity); c)
     {
-        auto time = std::chrono::system_clock::now();
-        auto dt = std::chrono::duration<float>(time - prevTime).count();
-        prevTime = time;
-
-        if (i % 2 == 0)
-        {
-            if (auto anim = ecs.getComponent<Animation>(i); anim != nullptr)
-            {
-                ecs.removeComponent<Animation>(i);
-            }
-        }
-
-        ecs.moveSystem(dt);
-        ecs.animSystem(dt);
+        *c = 4.5f;
+        printf("sucsess with code: %f\n", *c);
     }
 
-    std::chrono::duration<float> dur = std::chrono::system_clock::now() - start;
-    std::cout << "time native: " << dur.count() * 1000 << " seconds\n";
+    if(auto c = ecs.getComponent<float>(entity); c)
+    {
+        *c = 0.5f;
+        printf("sucsess with code: %f\n", *c);
+    }
+
+    ecs.removeComponent<int>(entity);
+
+    if(auto c = ecs.getComponent<int>(entity); c)
+    {
+        *c = 16;
+        printf("sucsess with code: %d\n", *c);
+    }
+    else
+    {
+        printf("failed\n");
+    }
+
+    ecs.destroyEntity(entity);
 
     return 0;
 }

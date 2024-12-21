@@ -1,44 +1,48 @@
 #ifndef ECS_HPP_INCLUDED
 #define ECS_HPP_INCLUDED
 
+#include <array>
 #include <vector>
-#include <type_traits>
+#include <memory>
 #include <algorithm>
 #include <utility>
+#include <bitset>
 
-#include "Components.hpp"
+#include "ComponentContainer.hpp"
 
+template<size_t N = 32>
 class Ecs final
 {
+    using ContainerPtr   = std::unique_ptr<BaseComponentContainer>;
+    using ComponentTable = std::array<uint32_t, N>;
+    using Entity         = std::pair<uint32_t, ComponentTable>;
+
 public:
     Ecs() noexcept;
     ~Ecs() noexcept;
 
-    int  createEntity() noexcept;
-    void destroyEntity(int entity) noexcept;
+    uint32_t createEntity() noexcept;
+    void destroyEntity(uint32_t entity) noexcept;
 
     template<class T>
-    T* addComponent(int entity) noexcept;
+    T* addComponent(uint32_t entity) noexcept;
 
     template<class T>
-    T* getComponent(int entity) noexcept;
+    T* getComponent(uint32_t entity) noexcept;
 
     template<class T>
-    void removeComponent(int entity) noexcept;
+    void removeComponent(uint32_t entity) noexcept;
 
-    void moveSystem(float dt) noexcept;
-    void animSystem(float dt) noexcept;
+    template<class T>
+    bool hasComponent(uint32_t entity) noexcept;
 
 private:
     template<class T>
-    void removeComponentFromContainer(int i, T& container) noexcept;
+    std::vector<T>* getContainer() noexcept;
 
-    std::vector<int>            m_entities;
-    std::vector<ComponentTable> m_tables;
-
-    std::vector<std::pair<int, Position>>  m_positions;
-    std::vector<std::pair<int, Velocity>>  m_velocities;
-    std::vector<std::pair<int, Animation>> m_animations;
+    std::vector<ContainerPtr>   m_componentContainers;
+    std::vector<Entity>         m_entities;
+    std::vector<std::bitset<N>> m_bitMasks;
 };
 
 #include "Ecs.inl"
