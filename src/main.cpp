@@ -61,5 +61,10 @@ int main()
 
     ecs.destroyEntity(e2);
 
+    if(!ecs.exists(e2))
+    {
+        printf("The entity %u was successfully destroyed\n", e2);
+    }
+
     return 0;
 }
