@@ -5,12 +5,11 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
-#include <utility>
 #include <bitset>
 
 #include "ComponentContainer.hpp"
 
-template<size_t N = 32>
+template<size_t N = 32> // Maximum number of components
 class Ecs final
 {
     using ContainerPtr   = std::unique_ptr<BaseComponentContainer>;
@@ -38,7 +37,7 @@ public:
 
 private:
     template<class T>
-    std::vector<T>* getContainer() noexcept;
+    std::vector<std::pair<uint32_t, T>>* getContainer() noexcept;
 
     std::vector<ContainerPtr>   m_componentContainers;
     std::vector<Entity>         m_entities;

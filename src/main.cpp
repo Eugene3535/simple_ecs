@@ -24,42 +24,42 @@ int main()
 {
     Ecs ecs;
 
-    auto entity = ecs.createEntity();
-    entity = ecs.createEntity();
-    entity = ecs.createEntity();
-    printf("Entity: %u\n", entity);
+    uint32_t e1 = ecs.createEntity();
+    uint32_t e2 = ecs.createEntity();
+    uint32_t e3 = ecs.createEntity();
+    printf("Entities has been created: %u, %u, %u;\n", e1, e2, e3);
 
-    if(auto c = ecs.addComponent<int>(entity); c)
+    if(auto c = ecs.addComponent<int>(e1); c)
+    {
+        *c = 4;
+        printf("Component found with value: %d\n", *c);
+    }
+
+    if(auto c = ecs.addComponent<int>(e2); c)
     {
         *c = 8;
-        printf("sucsess with code: %d\n", *c);
+        printf("Component found with value: %d\n", *c);
     }
 
-    if(auto c = ecs.addComponent<float>(entity); c)
+    if(auto c = ecs.getComponent<int>(e2); c)
     {
-        *c = 4.5f;
-        printf("sucsess with code: %f\n", *c);
+        *c = 12;
+        printf("Component found with value: %d\n", *c);
     }
 
-    if(auto c = ecs.getComponent<float>(entity); c)
-    {
-        *c = 0.5f;
-        printf("sucsess with code: %f\n", *c);
-    }
+    ecs.removeComponent<int>(e1);
 
-    ecs.removeComponent<int>(entity);
-
-    if(auto c = ecs.getComponent<int>(entity); c)
+    if(auto c = ecs.getComponent<int>(e1); c)
     {
         *c = 16;
-        printf("sucsess with code: %d\n", *c);
+        printf("Component found with value: %d\n", *c);
     }
     else
     {
-        printf("failed\n");
+        printf("Component not found\n");
     }
 
-    ecs.destroyEntity(entity);
+    ecs.destroyEntity(e2);
 
     return 0;
 }

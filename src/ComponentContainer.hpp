@@ -3,12 +3,13 @@
 
 #include <cstdint>
 #include <vector>
+#include <utility>
 
 class BaseComponentContainer
 {
 public:
     virtual ~BaseComponentContainer() noexcept;
-    virtual void erase(uint32_t idx) noexcept;
+    virtual uint32_t erase(uint32_t idx) noexcept;
 
     static uint32_t getComponentCount() noexcept;
 
@@ -29,19 +30,26 @@ private:
 template<class T>
 class ComponentContainer : public BaseComponentContainer
 {
+    using Component = std::pair<uint32_t, T>;
 public:
-    void erase(uint32_t idx) noexcept override
+    uint32_t erase(uint32_t idx) noexcept override
     {
         if(size_t index = static_cast<size_t>(idx); index < components.size())
         {
-            std::swap(components[index], components.back());
+            auto& backElement = components.back();
+            uint32_t owner = backElement.first;
+            std::swap(components[index], backElement);
             components.pop_back();
+
+            return owner;
         }
+
+        return UINT32_MAX;
     }
 
     static const uint32_t Type;
 
-    std::vector<T> components;
+    std::vector<Component> components;
 };
 
 template<class T>
