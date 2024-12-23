@@ -39,10 +39,10 @@ public:
     template<class T>
     bool hasComponent(uint32_t entity) const noexcept;
 
-private:
     template<class T>
     std::vector<std::pair<uint32_t, T>>* getContainer() noexcept;
 
+private:
     std::vector<ContainerPtr> m_componentContainers;
     std::vector<EntityData>   m_entities;
 };
