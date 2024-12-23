@@ -25,21 +25,12 @@ uint32_t Ecs<N>::createEntity() noexcept
 template<size_t N>
 void Ecs<N>::destroyEntity(uint32_t entity) noexcept
 {
-    auto quick_remove = [](auto& container, size_t index) -> void
-    {
-        if(index < container.size())
-        {
-            std::swap(container[index], container.back());
-            container.pop_back();
-        }
-    };
-
     auto componentCount = static_cast<size_t>(BaseComponentContainer::getComponentCount());
     auto& table         = m_entities[static_cast<size_t>(entity)].second;
 
     for(size_t componentId = 0; componentId < componentCount; ++componentId)
     {
-        if(table[componentId] != UINT32_MAX)
+        if(table[componentId] != Undefined)
         {
             auto container = m_componentContainers[componentId].get();
             uint32_t idx   = table[componentId];
@@ -49,7 +40,8 @@ void Ecs<N>::destroyEntity(uint32_t entity) noexcept
         }
     }
 
-    quick_remove(m_entities, static_cast<size_t>(entity));
+    std::swap(m_entities[static_cast<size_t>(entity)], m_entities.back());
+    m_entities.pop_back();
 }
 
 template<size_t N>
@@ -71,7 +63,7 @@ T* Ecs<N>::addComponent(uint32_t entity) noexcept
     auto  componentId = static_cast<size_t>(ComponentContainer<T>::Type);
     auto  container   = getContainer<T>();
 
-    if(table[componentId] == UINT32_MAX)
+    if(table[componentId] == Undefined)
     {
         uint32_t idx = container->size();
         auto& newComponent = container->emplace_back();
@@ -93,7 +85,7 @@ T* Ecs<N>::getComponent(uint32_t entity) noexcept
     auto& table      = m_entities[static_cast<size_t>(entity)].second;
     auto componentId = static_cast<size_t>(ComponentContainer<T>::Type);
 
-    if(table[componentId] != UINT32_MAX)
+    if(table[componentId] != Undefined)
     {
         auto container = getContainer<T>();
         auto& table    = m_entities[static_cast<size_t>(entity)].second;
@@ -112,14 +104,14 @@ void Ecs<N>::removeComponent(uint32_t entity) noexcept
     auto& table      = m_entities[static_cast<size_t>(entity)].second;
     auto componentId = static_cast<size_t>(ComponentContainer<T>::Type);
 
-    if(table[componentId] != UINT32_MAX)
+    if(table[componentId] != Undefined)
     {
         auto& componentTable = m_entities[static_cast<size_t>(entity)].second;
         size_t index         = static_cast<size_t>(componentTable[componentId]);
         auto container       = static_cast<ComponentContainer<T>*>(m_componentContainers[componentId].get());
         size_t owner         = static_cast<size_t>(container->erase(index));
 
-        componentTable[componentId] = UINT32_MAX;
+        componentTable[componentId] = Undefined;
         m_entities[owner].second[componentId] = index;
     }
 }
@@ -131,7 +123,7 @@ bool Ecs<N>::hasComponent(uint32_t entity) const noexcept
     auto componentId = static_cast<size_t>(ComponentContainer<T>::Type);
     const auto& componentTable = m_entities[static_cast<size_t>(entity)].second;
 
-    return componentTable[componentId] != UINT32_MAX;
+    return componentTable[componentId] != Undefined;
 }
 
 template<size_t N>

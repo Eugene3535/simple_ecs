@@ -11,6 +11,8 @@
 template<size_t N = 32> // Maximum number of components
 class Ecs final
 {
+    static constexpr uint32_t Undefined = UINT32_MAX;
+
     using ContainerPtr   = std::unique_ptr<BaseComponentContainer>;
     using ComponentTable = std::array<uint32_t, N>;
     using EntityData     = std::pair<uint32_t, ComponentTable>;
