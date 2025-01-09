@@ -130,18 +130,18 @@ template<size_t N>
 template<class T>
 std::vector<std::pair<uint32_t, T>>* Ecs<N>::getContainer() noexcept
 {
-    if(!m_componentContainers.empty())
-    {
-        if(auto index = static_cast<size_t>(ComponentContainer<T>::Type); index < m_componentContainers.size())
-        {
-            auto container = static_cast<ComponentContainer<T>*>(m_componentContainers[index].get());
+    size_t index = static_cast<size_t>(ComponentContainer<T>::Type);
 
-            return &container->components;
-        }
+    if(m_componentContainers[index])
+    {
+        auto container = static_cast<ComponentContainer<T>*>(m_componentContainers[index].get());
+
+        return &container->components;
     }
 
-    auto containerPtr = static_cast<ComponentContainer<T>*>(m_componentContainers.emplace_back(std::make_unique<ComponentContainer<T>>()).get());
+    m_componentContainers[index] = std::make_unique<ComponentContainer<T>>();
+    auto container = static_cast<ComponentContainer<T>*>(m_componentContainers[index].get());
 
-    return &containerPtr->components;
+    return &container->components;
 }
 

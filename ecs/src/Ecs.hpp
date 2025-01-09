@@ -43,8 +43,8 @@ public:
     std::vector<std::pair<uint32_t, T>>* getContainer() noexcept;
 
 private:
-    std::vector<ContainerPtr> m_componentContainers;
-    std::vector<EntityData>   m_entities;
+    std::array<ContainerPtr, N> m_componentContainers;
+    std::vector<EntityData>     m_entities;
 };
 
 #include "Ecs.inl"
