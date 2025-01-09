@@ -120,7 +120,7 @@ template<size_t N>
 template<class T>
 bool Ecs<N>::hasComponent(uint32_t entity) const noexcept
 {
-    auto componentId = static_cast<size_t>(ComponentContainer<T>::Type);
+    size_t componentId = static_cast<size_t>(ComponentContainer<T>::Type);
     const auto& componentTable = m_entities[static_cast<size_t>(entity)].second;
 
     return componentTable[componentId] != Undefined;
@@ -130,18 +130,17 @@ template<size_t N>
 template<class T>
 std::vector<std::pair<uint32_t, T>>* Ecs<N>::getContainer() noexcept
 {
-    size_t index = static_cast<size_t>(ComponentContainer<T>::Type);
+    auto& containerPtr = m_componentContainers[static_cast<size_t>(ComponentContainer<T>::Type)];
 
-    if(m_componentContainers[index])
+    if(containerPtr)
     {
-        auto container = static_cast<ComponentContainer<T>*>(m_componentContainers[index].get());
+        auto container = static_cast<ComponentContainer<T>*>(containerPtr.get());
 
         return &container->components;
     }
 
-    m_componentContainers[index] = std::make_unique<ComponentContainer<T>>();
-    auto container = static_cast<ComponentContainer<T>*>(m_componentContainers[index].get());
+    containerPtr = std::make_unique<ComponentContainer<T>>();
+    auto container = static_cast<ComponentContainer<T>*>(containerPtr.get());
 
     return &container->components;
 }
-
