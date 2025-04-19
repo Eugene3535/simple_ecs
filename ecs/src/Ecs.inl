@@ -61,7 +61,7 @@ T* Ecs<N>::addComponent(uint32_t entity) noexcept
 {
     auto& table       = m_entities[static_cast<size_t>(entity)].second;
     auto  componentId = static_cast<size_t>(ComponentContainer<T>::Type);
-    auto  container   = getContainer<T>();
+    auto  container   = findContainer<T>();
 
     if(table[componentId] == Undefined)
     {
@@ -87,7 +87,7 @@ T* Ecs<N>::getComponent(uint32_t entity) noexcept
 
     if(table[componentId] != Undefined)
     {
-        auto container = getContainer<T>();
+        auto container = findContainer<T>();
         auto& table    = m_entities[static_cast<size_t>(entity)].second;
         size_t idx     = static_cast<size_t>(table[componentId]);
 
@@ -101,8 +101,8 @@ template<size_t N>
 template<class T>
 void Ecs<N>::removeComponent(uint32_t entity) noexcept
 {
-    auto& table      = m_entities[static_cast<size_t>(entity)].second;
-    auto componentId = static_cast<size_t>(ComponentContainer<T>::Type);
+    auto& table        = m_entities[static_cast<size_t>(entity)].second;
+    size_t componentId = static_cast<size_t>(ComponentContainer<T>::Type);
 
     if(table[componentId] != Undefined)
     {
@@ -128,7 +128,26 @@ bool Ecs<N>::hasComponent(uint32_t entity) const noexcept
 
 template<size_t N>
 template<class T>
-std::vector<std::pair<uint32_t, T>>* Ecs<N>::getContainer() noexcept
+std::span<std::pair<uint32_t, T>> Ecs<N>::getContainer() noexcept
+{
+    auto& containerPtr = m_componentContainers[static_cast<size_t>(ComponentContainer<T>::Type)];
+
+    if(containerPtr)
+    {
+        auto container = static_cast<ComponentContainer<T>*>(containerPtr.get());
+
+        return std::span(container->components);
+    }
+
+    containerPtr = std::make_unique<ComponentContainer<T>>();
+    auto container = static_cast<ComponentContainer<T>*>(containerPtr.get());
+
+    return std::span(container->components);
+}
+
+template<size_t N>
+template<class T>
+std::vector<std::pair<uint32_t, T>>* Ecs<N>::findContainer() noexcept
 {
     auto& containerPtr = m_componentContainers[static_cast<size_t>(ComponentContainer<T>::Type)];
 

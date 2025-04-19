@@ -24,7 +24,7 @@ void moveSystem(Ecs<MAX_COMPONENTS>& ecs)
 {
     auto velocities = ecs.getContainer<Velocity>();
 
-    for (auto& pair : *velocities)
+    for (auto& pair : velocities)
     {
         uint32_t entity = pair.first;
 
@@ -43,7 +43,7 @@ void animSystem(Ecs<MAX_COMPONENTS>& ecs, float dt)
 {
     auto anim = ecs.getContainer<Animation>();
 
-    for(auto a : *anim)
+    for(auto& a : anim)
     {
         a.second.dt += dt;
 
@@ -91,6 +91,11 @@ int main()
 
         moveSystem(ecs);
         animSystem(ecs, dt);
+    }
+
+    for (uint32_t i = 0; i < nbEntities; ++i)
+    {
+        ecs.destroyEntity(i);
     }
 
     std::chrono::duration<float> dur = std::chrono::system_clock::now() - start;

@@ -3,6 +3,7 @@
 
 #include <array>
 #include <vector>
+#include <span>
 #include <memory>
 #include <algorithm>
 
@@ -40,9 +41,12 @@ public:
     bool hasComponent(uint32_t entity) const noexcept;
 
     template<class T>
-    std::vector<std::pair<uint32_t, T>>* getContainer() noexcept;
+    std::span<std::pair<uint32_t, T>> getContainer() noexcept;
 
 private:
+    template<class T>
+    std::vector<std::pair<uint32_t, T>>* findContainer() noexcept;
+
     std::array<ContainerPtr, N> m_componentContainers;
     std::vector<EntityData>     m_entities;
 };
