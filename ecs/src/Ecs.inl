@@ -130,19 +130,7 @@ template<size_t N>
 template<class T>
 std::span<std::pair<uint32_t, T>> Ecs<N>::getContainer() noexcept
 {
-    auto& containerPtr = m_componentContainers[static_cast<size_t>(ComponentContainer<T>::Type)];
-
-    if(containerPtr)
-    {
-        auto container = static_cast<ComponentContainer<T>*>(containerPtr.get());
-
-        return std::span(container->components);
-    }
-
-    containerPtr = std::make_unique<ComponentContainer<T>>();
-    auto container = static_cast<ComponentContainer<T>*>(containerPtr.get());
-
-    return std::span(container->components);
+    return std::span(*findContainer<T>());
 }
 
 template<size_t N>
